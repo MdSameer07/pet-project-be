@@ -24,8 +24,8 @@ type Database interface {
 	DeleteFeedBack(*proto.DeleteFeedBackRequest) (uint32,error)
 	AddMovieToLikes(*proto.AddMovieToLikesRequest) (*Likes,error)
 	RemoveMovieFromLikes(*proto.RemoveMovieFromLikesRequest) (uint32,error)
-	GetAllMovies(*proto.GetAllMoviesRequest) (*sql.Rows,error)
-	SearchForMovies(*proto.SearchRequest) (*sql.Rows,error)
+	GetAllMovies(*proto.GetAllMoviesRequest) ([]*proto.Movie,error)
+	SearchForMovies(*proto.SearchRequest) ([]*proto.Movie,error)
 	UpdateProfile(*proto.UpdateProfileRequest) (*User,error)
 	AddReviewForMovie(*proto.AddReviewRequest) (*Review,error)
 	UpdateReviewForMovie(*proto.UpdateReviewRequest) (*Review,error)
@@ -315,17 +315,39 @@ func (db DBClient) RemoveMovieFromLikes(req *proto.RemoveMovieFromLikesRequest) 
 	return 200,nil
 }
 
-func (db DBClient) GetAllMovies(req *proto.GetAllMoviesRequest) (*sql.Rows,error){
+func (db DBClient) GetAllMovies(req *proto.GetAllMoviesRequest) ([]*proto.Movie,error){
 	rows, err := db.Db.Model(&Movie{}).Rows()
 	if err != nil {
 		return nil,status.Errorf(codes.Aborted, "Error while getting movies from database: %v", err)
 	}
+	var movies []*proto.Movie
 	defer rows.Close()
-	return rows,nil
+	for rows.Next() {
+		var movie Movie
+		err := db.Db.ScanRows(rows, &movie)
+		if err != nil {
+			return nil,status.Errorf(codes.FailedPrecondition, "Error while scanning movies into slice")
+		}
+		formatted_time := movie.MovieReleaseDate.Format("02-01-2006")
+		movies = append(movies, &proto.Movie{
+			Id:          uint32(movie.ID),
+			Name:        movie.MovieName,
+			Image:       movie.MovieImage,
+			Director:    movie.MovieDirector,
+			Description: movie.MovieDescription,
+			Rating:      movie.MovieRating,
+			Ott:         movie.MovieOtt,
+			ReleaseDate: formatted_time,
+			CategoryId:  uint32(movie.CategoryId),
+			AdminId:     uint32(movie.AdminId),
+		})
+	}
+	return movies,nil
 }
 
-func (db DBClient) SearchForMovies(req *proto.SearchRequest) (*sql.Rows,error){
+func (db DBClient) SearchForMovies(req *proto.SearchRequest) ([]*proto.Movie,error){
 	var rows *sql.Rows
+	defer rows.Close()
 	var err error
 	switch req.Filter {
 	case proto.SearchRequest_Name:
@@ -350,7 +372,29 @@ func (db DBClient) SearchForMovies(req *proto.SearchRequest) (*sql.Rows,error){
 		return nil,status.Errorf(codes.Aborted, "Error!! Enter correct name or category")
 	}
 
-	return rows,err
+	var movies []*proto.Movie
+
+	for rows.Next() {
+		var movie Movie
+		err := db.Db.ScanRows(rows, &movie)
+		if err != nil {
+			return nil,status.Errorf(codes.FailedPrecondition, "Error while scanning movies into slice")
+		}
+		formatted_time := movie.MovieReleaseDate.Format("02-01-2006")
+		movies = append(movies, &proto.Movie{
+			Id:          uint32(movie.ID),
+			Name:        movie.MovieName,
+			Image:       movie.MovieImage,
+			Director:    movie.MovieDirector,
+			Description: movie.MovieDescription,
+			Rating:      movie.MovieRating,
+			Ott:         movie.MovieOtt,
+			ReleaseDate: formatted_time,
+			CategoryId:  uint32(movie.CategoryId),
+			AdminId:     uint32(movie.AdminId),
+		})
+	}
+	return movies,nil
 }
 
 func (db DBClient) UpdateProfile(req *proto.UpdateProfileRequest) (*User,error){

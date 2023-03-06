@@ -8,17 +8,9 @@ import (
 
 func (m *MoviesuggestionsServiceserver) GetAllMovies(req *proto.GetAllMoviesRequest, stream proto.MovieSuggestionsService_GetAllMoviesServer) error {
 
-	var movies []*proto.Movie
-
-	rows,err := m.Db.GetAllMovies(req)
+	movies,err := m.Db.GetAllMovies(req)
 	if err!=nil{
 		return err
-	}
-
-	movies, err = m.AddingMoviesToSlice(rows, movies)
-
-	if err != nil {
-		return status.Errorf(codes.Aborted, "Error while getting movies: %v", err)
 	}
 
 	for _, movie := range movies {
@@ -31,17 +23,9 @@ func (m *MoviesuggestionsServiceserver) GetAllMovies(req *proto.GetAllMoviesRequ
 
 func (m *MoviesuggestionsServiceserver) SearchForMovies(req *proto.SearchRequest, stream proto.MovieSuggestionsService_SearchForMoviesServer) error {
 
-	var movies []*proto.Movie
-
-	rows,err := m.Db.SearchForMovies(req)
+	movies,err := m.Db.SearchForMovies(req)
 	if err!=nil{
 		return err
-	}
-
-	movies, err = m.AddingMoviesToSlice(rows, movies)
-
-	if err != nil {
-		return status.Errorf(codes.Aborted, "Error while getting movies: %v", err)
 	}
 
 	if len(movies) == 0 {

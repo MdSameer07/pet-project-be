@@ -5,7 +5,6 @@
 package database
 
 import (
-	sql "database/sql"
 	reflect "reflect"
 
 	proto "example.com/pet-project/proto"
@@ -141,10 +140,10 @@ func (mr *MockDatabaseMockRecorder) DeleteReviewForMovie(arg0 interface{}) *gomo
 }
 
 // GetAllMovies mocks base method.
-func (m *MockDatabase) GetAllMovies(arg0 *proto.GetAllMoviesRequest) (*sql.Rows, error) {
+func (m *MockDatabase) GetAllMovies(arg0 *proto.GetAllMoviesRequest) ([]*proto.Movie, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllMovies", arg0)
-	ret0, _ := ret[0].(*sql.Rows)
+	ret0, _ := ret[0].([]*proto.Movie)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -276,10 +275,10 @@ func (mr *MockDatabaseMockRecorder) RemoveMovieFromWatchList(arg0 interface{}) *
 }
 
 // SearchForMovies mocks base method.
-func (m *MockDatabase) SearchForMovies(arg0 *proto.SearchRequest) (*sql.Rows, error) {
+func (m *MockDatabase) SearchForMovies(arg0 *proto.SearchRequest) ([]*proto.Movie, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SearchForMovies", arg0)
-	ret0, _ := ret[0].(*sql.Rows)
+	ret0, _ := ret[0].([]*proto.Movie)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
