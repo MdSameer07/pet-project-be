@@ -9,16 +9,15 @@ import (
 	"google.golang.org/grpc"
 )
 
-func main(){
-	connection,err := grpc.Dial("localhost:50051",grpc.WithInsecure())
-	if err!=nil{
-		log.Fatalf("Failed to connect: %v",err)
+func main() {
+	connection, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	if err != nil {
+		log.Fatalf("Failed to connect: %v", err)
 		return
 	}
 	defer connection.Close()
 
 	client := proto.NewMovieSuggestionsServiceClient(connection)
-
 
 	//Adding Movie To Database
 
