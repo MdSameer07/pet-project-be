@@ -1,0 +1,350 @@
+syntax = "proto3";
+
+option go_package = "/proto";
+
+package proto;
+
+service MovieSuggestionsService{
+
+    //Admin Endpoints
+
+    //This rpc takes in Movie as input, adds that movie to database and sends that created movie back in response
+    rpc AddMovieToDatabase(AddMovieToDatabaseRequest) returns (AddMovieToDatabaseResponse);
+
+    //This rpc takes in Movie Id as input, remove that movie from database and returns status and error in reponse based on result of that query
+    rpc DeleteMovieFromDatabase(DeleteMovieFromDatabaseRequest) returns (DeleteMovieFromDatabaseResponse);  
+
+    //This rpc takes in admin_id as input , validates that id and returns all the feedbacks posted by the user in response
+    rpc GetFeedBack(GetFeedBackRequest) returns (stream GetFeedBackResponse);  
+    
+    //User Endpoints
+
+    //This rpc takes in user credentials such as email and password as input and authenticates that user and returns access_token as output
+    rpc Login(LoginRequest) returns (LoginResponse); 
+
+    //This rpc takes in all user credentials adds them to user database and returns created user credentials
+    rpc Register(RegisterRequest) returns (RegisterResponse);
+
+    //This rpc doesn't need any request paramter, it just sends all the movies present in the database in response
+    rpc GetAllMovies(GetAllMoviesRequest) returns (stream GetAllMoviesResponse);  
+
+    //This rpc takes in parameter based on name/category, if it is category again it selects that category which is passed in request argument , 
+    //and if it is name it searches for all movies that start with that name and returns all that movies based on that condition in response
+    rpc SearchForMovies(SearchRequest) returns (stream SearchResponse);  
+
+    //This rpc takes user_id and movie_id as request and returns added to watchlist movie in response
+    rpc AddMovieToWatchList(AddMovieToWatchListRequest) returns (AddMovieToWatchListResponse);  
+
+    //This rpc takes user_id and movie_id as request , deletes that movie from the database and returns status and error in reponse based on result of that query
+    rpc RemoveMovieFromWatchList(RemoveMovieFromWatchListRequest) returns (RemoveMovieFromWatchListResponse);  //Done, check
+
+    //This rpc takes user_id and movie_id as request and returns added to likes movie in response
+    rpc AddMovieToLikes(AddMovieToLikesRequest) returns (AddMovieToLikesResponse); 
+
+    //This rpc takes user_id and movie_id as request , deletes that movie from the database and returns status and error in reponse based on result of that query
+    rpc RemoveMovieFromLikes(RemoveMovieFromLikesRequest) returns (RemoveMovieFromLikesResponse);  
+
+    //This rpc takes user_id movie_id and description of that review as request and returns created review as response
+    rpc AddReviewForMovie(AddReviewRequest) returns (AddReviewResponse);
+
+    //This rpc takes user_id movie_id and description of review as request , updates the table based on condition and returns the updated review as response
+    rpc UpdateReviewForMovie(UpdateReviewRequest) returns (UpdateReviewResponse);  
+
+    //This rpc takes user_id movie_id as request , deletes that particular review and returns status and error in reponse based on result of that query
+    rpc DeleteReviewForMovie(DeleteReviewRequest) returns (DeleteReviewResponse);  
+
+    //This rpc takes user_id name email phone_number as request, updates them for that particular user and returns updated profile values as response
+    rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);  
+
+    //This rpc takes user_id and movie_id as request , adds that into viewed table and returns that added particular added row as response 
+    rpc MarkAsRead(MarkAsReadRequest) returns (MarkAsReadResponse);  
+
+    //This rpc takes user_id and movie_id as request , removes that from viewed table and return status and error
+    rpc MarkAsUnread(MarkAsUnreadRequest) returns (MarkAsUnreadResponse);
+    //This rpc takes in user_id description as request and returns newly created feedback as response
+    rpc GiveFeedBack(GiveFeedBackRequest) returns (GiveFeedBackResponse);  
+
+    //This rpc takes in user_id description as request , updates required values in the database and returns the updated feedback as response
+    rpc UpdateFeedBack(UpdateFeedBackRequest) returns (UpdateFeedBackResponse);  
+
+    //This rpc takes in user_id , feedback id as request deletes that particular feedback and returns status and error in reponse based on result of that query
+    rpc DeleteFeedBack(DeleteFeedBackRequest) returns (DeleteFeedBackResponse);  
+
+}
+
+message Admin{
+    uint32 id = 1;
+    string name = 2;
+    string email = 3;
+    string password = 4;
+}
+
+message User{
+    uint32 id = 1;
+    string name = 2;
+    string email = 3;
+    string password = 4;
+    string phone_number = 5;
+}
+
+message Movie{
+    uint32 id = 1;
+    string name = 2;
+    string image = 3;
+    Category category = 4;
+    float rating = 5;
+    string director = 6;
+    string description = 7;
+    string release_date = 8;
+    uint32 category_id = 9;
+    uint32 admin_id = 10;
+    string ott = 11;
+}
+
+message WatchList{
+    uint32 id = 1;
+    uint32 user_id = 2;
+    uint32 movie_id = 3;
+}
+
+message Likes{
+    uint32 id = 1;
+    uint32 user_id = 2;
+    uint32 movie_id = 3;
+}
+
+message Review{
+    uint32 id = 1;
+    uint32 user_id = 2;
+    uint32 movie_id = 3;
+    string description = 4;
+    uint32 stars = 5;
+}
+
+message Viewed{
+    uint32 id = 1;
+    uint32 user_id = 2;
+    uint32 movie_id = 3;
+}
+
+message FeedBack{
+    uint32 id = 1;
+    uint32 user_id = 2;
+    string description = 3;
+}
+
+message Category{
+    enum Type {
+        Thriller = 0;
+        Horror = 1;
+        Action = 2;
+        Comedy = 3;
+        Romance = 4;
+    }
+    Type type = 1;
+}
+
+message AddMovieToDatabaseRequest{
+    string name = 1;
+    string category = 2;
+    float rating = 3;
+    string director = 4;
+    string description = 5;
+    string release_date = 6;
+    uint32 admin_id = 7;
+    string imageurl = 8;
+    string movieott = 9;
+}
+
+message AddMovieToDatabaseResponse{
+    Movie movie = 1;
+}
+
+message DeleteMovieFromDatabaseRequest{
+    uint32 movie_id = 1;
+}
+
+message DeleteMovieFromDatabaseResponse{
+    uint32 status = 1;
+    string error = 2;
+}
+
+message GetFeedBackRequest{
+    string admin_email = 1;
+}
+
+message GetFeedBackResponse{
+    string description = 1;
+}
+
+message LoginRequest{
+    string email = 1;
+    string password = 2;
+}
+
+message LoginResponse{
+    uint32 id = 1;
+}
+
+message RegisterRequest{
+    string name = 1;
+    string email = 2;
+    string password = 3;
+    string phone_number = 4;
+}
+
+message RegisterResponse{
+    User user = 1;
+}
+
+message GetAllMoviesRequest{}
+
+message GetAllMoviesResponse{
+    Movie movie = 1;
+}
+
+message SearchRequest{
+    enum Filter{
+        Category = 0;
+        Name = 1;
+    }
+    Filter filter = 1;
+    Category category = 2;
+    string name = 3;
+}
+
+message SearchResponse{
+    Movie movie = 1;
+}
+
+message AddMovieToWatchListRequest{
+    uint32 user_id = 1;
+    uint32 movie_id = 2;
+}
+
+message AddMovieToWatchListResponse{
+    WatchList watchlist = 1;
+}
+
+message RemoveMovieFromWatchListRequest{
+    uint32 user_id = 1;
+    uint32 movie_id = 2;
+}
+
+message RemoveMovieFromWatchListResponse{
+    uint32 status = 1;
+    string errors = 2; 
+}
+
+message AddMovieToLikesRequest{
+    uint32 user_id = 1;
+    uint32 movie_id = 2;
+}
+
+message AddMovieToLikesResponse{
+    Likes like = 1;
+}
+
+message RemoveMovieFromLikesRequest{
+    uint32 user_id = 1;
+    uint32 movie_id = 2;
+}
+
+message RemoveMovieFromLikesResponse{
+    uint32 status = 1;
+    string errors = 2;
+}
+
+message AddReviewRequest{
+    uint32 user_id = 1;
+    uint32 movie_id = 2;
+    string description = 3;
+    uint32 stars = 4;
+}
+
+message AddReviewResponse{
+    Review review = 1;
+}
+
+message UpdateReviewRequest{
+    uint32 user_id = 1;
+    uint32 movie_id = 2;
+    string description = 3;
+    uint32 stars = 4;
+}
+
+message UpdateReviewResponse{
+    Review review = 1; 
+}
+
+message DeleteReviewRequest{
+    uint32 user_id = 1;
+    uint32 movie_id = 2;
+}
+
+message DeleteReviewResponse{
+    uint32 status = 1;
+    string errors = 2;
+}
+
+message UpdateProfileRequest{
+    uint32 id = 1;
+    string name = 2;
+    string email = 3;
+    string phone_number = 4;
+}
+
+message UpdateProfileResponse{
+    uint32 id = 4;
+    string name = 1;
+    string email = 2;
+    string phone_number = 3;
+}
+
+message MarkAsReadRequest{
+    uint32 user_id = 1;
+    uint32 movie_id = 2;
+}
+
+message MarkAsReadResponse{
+    Viewed viewed = 1;
+}
+
+message MarkAsUnreadRequest{
+    uint32 user_id = 1;
+    uint32 movie_id = 2;
+}
+
+message MarkAsUnreadResponse{
+    uint32 status = 1;
+    string errors = 2;
+}
+
+message GiveFeedBackRequest{
+    uint32 user_id = 1;
+    string description = 3;
+}
+
+message GiveFeedBackResponse{
+    FeedBack feedback = 1;
+}
+
+message UpdateFeedBackRequest{
+    uint32 user_id = 1;
+    uint32 feedback_id = 2;
+    string description = 3;
+}
+
+message UpdateFeedBackResponse{
+    FeedBack feedback = 1; 
+}
+
+message DeleteFeedBackRequest{
+    uint32 user_id = 1;
+    uint32 feedback_id = 2;
+}
+
+message DeleteFeedBackResponse{
+    uint32 status = 1;
+    string errors = 2;
+}
