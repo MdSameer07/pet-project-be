@@ -294,25 +294,4 @@ func main() {
 	}
 
 	fmt.Println("Movie4 created successfully")
-
-	// movie5 := Movie{
-	// 	MovieName: "The Sound Of Music",
-	// 	MovieImage:  "https://i.ytimg.com/vi/NJRI-QK7OaU/maxresdefault.jpg",
-	// 	MovieRating: 8.1,
-	// 	MovieDirector:  "Robert Wise",
-	// 	MovieDescription: "A tuneful, heartwarming story, it is based on the real life story of the Von Trapp Family singers, one of the world's best-known concert groups in the era immediately preceding World War II. Julie Andrews plays the role of Maria, the tomboyish postulant at an Austrian abbey who becomes a governess in the home of a widowed naval captain with seven children, and brings a new love of life and music into the home.",
-	// 	MovieReleaseDate: time.Date(1965,3,1,0,0,0,0,time.UTC),
-	// 	MovieOtt: "https://www.hotstar.com/in",
-	// 	Category: Category{
-	// 		Label: "romance",
-	// 	},
-	// 	AdminId: 2,
-	// }
-
-	// if err := db.Create(&movie5).Error; err!=nil{
-	// 	log.Fatalf("Error while creating movie3: %v",err)
-	// 	return 
-	// }
-
-	// fmt.Println("Movie5 created successfully")
 }
