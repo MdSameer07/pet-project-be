@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"example.com/pet-project/proto"
+	"example.com/pet-project/gen/proto"
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
@@ -14,9 +14,11 @@ import (
 )
 
 type Database interface {
+	AdminLogin(*proto.AdminLoginRequest) (uint32,error)
 	AddMovieToDatabase(*proto.AddMovieToDatabaseRequest)(*Movie,error)
 	DeleteMovieFromDatabase(*proto.DeleteMovieFromDatabaseRequest) (uint32,error)
 	GetFeedBack(*proto.GetFeedBackRequest) ([]string,error)
+	GetFeeedBack(*proto.GetFeeedBackRequest) ([]string,error)
 	Login(*proto.LoginRequest) (uint32,error)
 	Register(*proto.RegisterRequest) (*User,error)
 	GiveFeedBack(*proto.GiveFeedBackRequest) (*FeedBack,error)
@@ -24,8 +26,12 @@ type Database interface {
 	DeleteFeedBack(*proto.DeleteFeedBackRequest) (uint32,error)
 	AddMovieToLikes(*proto.AddMovieToLikesRequest) (*Likes,error)
 	RemoveMovieFromLikes(*proto.RemoveMovieFromLikesRequest) (uint32,error)
-	GetAllMovies(*proto.GetAllMoviesRequest) (*sql.Rows,error)
-	SearchForMovies(*proto.SearchRequest) (*sql.Rows,error)
+	GetAllMovies(*proto.GetAllMoviesRequest) ([]*proto.Movie,error)
+	GetAllMoviess(*proto.GetAllMoviessRequest) ([]*proto.Movie,error)
+	GetMovieById(*proto.GetMovieByIdRequest) (*Movie,error)
+	GetMovieByCategory(*proto.GetMovieByCategoryRequest) ([]*proto.Movie,error)
+	SearchForMovies(*proto.SearchRequest) ([]*proto.Movie,error)
+	SearchForMoviess(*proto.SearchhRequest) ([]*proto.Movie,error)
 	UpdateProfile(*proto.UpdateProfileRequest) (*User,error)
 	AddReviewForMovie(*proto.AddReviewRequest) (*Review,error)
 	UpdateReviewForMovie(*proto.UpdateReviewRequest) (*Review,error)
@@ -40,9 +46,19 @@ type DBClient struct {
 	Db *gorm.DB
 }
 
+func(db DBClient) AdminLogin(req *proto.AdminLoginRequest) (uint32,error){
+
+	var admin Admin
+	if err := db.Db.Model(&Admin{}).Where("admin_email=? and admin_password=?",req.Email,req.Password).Find(&admin).Error; err!=nil{
+		return 0,status.Errorf(codes.NotFound,"Enter valid email Id or password")
+	}
+
+	return uint32(admin.ID),nil
+}
+
 func (db DBClient) AddMovieToDatabase(req *proto.AddMovieToDatabaseRequest) (*Movie,error) {
 	var admin Admin
-	result := db.Db.Model(&Admin{}).Where("id=?", req.GetAdminId()).Find(&admin)
+	result := db.Db.Debug().Model(&Admin{}).Where("id=?", req.GetAdminId()).Find(&admin)
 	if result.Error != nil {
 		if result.RecordNotFound() == true {
 			return nil, status.Errorf(codes.NotFound, "Admin with this adminId doesn't exist in the admins table")
@@ -56,10 +72,11 @@ func (db DBClient) AddMovieToDatabase(req *proto.AddMovieToDatabaseRequest) (*Mo
 
 	var category Category
 
-	if err := db.Db.FirstOrCreate(&category, Category{Label: strings.ToLower(req.Category)}).Error; err != nil {
+	if err := db.Db.Debug().FirstOrCreate(&category, Category{Label: strings.ToLower(req.Category)}).Error; err != nil {
 		return nil, status.Errorf(codes.Aborted, "Error while creating category file: %v", err)
 	}
 
+	fmt.Println(float32(req.Rating))
 	movie := &Movie{
 		MovieName:        req.Name,
 		MovieImage:       req.Imageurl,
@@ -72,7 +89,7 @@ func (db DBClient) AddMovieToDatabase(req *proto.AddMovieToDatabaseRequest) (*Mo
 		CategoryId:       int(category.ID),
 	}
 
-	if err := db.Db.Create(&movie).Error; err != nil {
+	if err := db.Db.Debug().Create(&movie).Error; err != nil {
 		return nil, status.Errorf(codes.Canceled, "Error while creating a Movie: %v", err)
 	}
 	fmt.Println(movie)
@@ -82,14 +99,14 @@ func (db DBClient) AddMovieToDatabase(req *proto.AddMovieToDatabaseRequest) (*Mo
 
 func (db DBClient) DeleteMovieFromDatabase(req *proto.DeleteMovieFromDatabaseRequest) (uint32,error){
 	var movie Movie
-	result := db.Db.Model(&Movie{}).Where("id=?", req.MovieId).Find(&movie)
+	result := db.Db.Debug().Model(&Movie{}).Where("id=?", req.MovieId).Find(&movie)
 	if result.Error != nil {
 		if result.RecordNotFound() == true {
 			return 500, status.Errorf(codes.NotFound, "Movie with gievn Id not found")
 		}
 	}
 
-	if err := db.Db.Unscoped().Delete(&movie).Error; err != nil {
+	if err := db.Db.Debug().Unscoped().Delete(&movie).Error; err != nil {
 		return 500, status.Errorf(codes.Internal, "Error while deleting movie from database: %v", err)
 	}
 
@@ -98,10 +115,38 @@ func (db DBClient) DeleteMovieFromDatabase(req *proto.DeleteMovieFromDatabaseReq
 
 func (db DBClient) GetFeedBack(req *proto.GetFeedBackRequest) ([]string,error){
 	var admin Admin
-	result := db.Db.Model(&Admin{}).Where("admin_email=?", req.AdminEmail).Find(&admin)
+	result := db.Db.Model(&Admin{}).Where("id=?", req.AdminId).Find(&admin)
 	if result.Error != nil {
 		if result.RecordNotFound() == true {
 			return nil,status.Errorf(codes.Canceled, "Admin with provided Id doesn't exist in the Admin Table")
+		}
+	}
+
+	var feedbacks []string
+	rows, err := db.Db.Model(&FeedBack{}).Rows()
+	if err != nil {
+		return nil,status.Errorf(codes.Aborted, "Error while getting feedbacks from database: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var feedback FeedBack
+		err := db.Db.ScanRows(rows, &feedback)
+		if err != nil {
+			return nil,status.Errorf(codes.FailedPrecondition, "Error while scanning feedbacks into slice: %v", err)
+		}
+		feedbacks = append(feedbacks, feedback.Description)
+	}
+
+	return feedbacks,nil
+}
+
+func (db DBClient) GetFeeedBack(req *proto.GetFeeedBackRequest) ([]string,error){
+	var admin Admin
+	result := db.Db.Model(&Admin{}).Where("id=?",req.AdminId).Find(&admin)
+	if result.Error!=nil{
+		if result.RecordNotFound()==true{
+			return nil,status.Errorf(codes.Canceled,"Admin with provoded Id doesn't exist in the admins Table")
 		}
 	}
 
@@ -208,7 +253,7 @@ func (db DBClient) UpdateFeedBack(req *proto.UpdateFeedBackRequest) (*FeedBack,e
 	result = db.Db.Model(&FeedBack{}).Where("id=? and user_id=?", req.FeedbackId, req.UserId).Find(&feedback2)
 	if result.Error != nil {
 		if result.RecordNotFound() == true {
-			return nil, status.Errorf(codes.NotFound, "User has not added this partucular feedback")
+			return nil, status.Errorf(codes.NotFound, "User has not added this particular feedback")
 		}
 	}
 
@@ -315,16 +360,117 @@ func (db DBClient) RemoveMovieFromLikes(req *proto.RemoveMovieFromLikesRequest) 
 	return 200,nil
 }
 
-func (db DBClient) GetAllMovies(req *proto.GetAllMoviesRequest) (*sql.Rows,error){
+func (db DBClient) GetAllMovies(req *proto.GetAllMoviesRequest) ([]*proto.Movie,error){
 	rows, err := db.Db.Model(&Movie{}).Rows()
 	if err != nil {
 		return nil,status.Errorf(codes.Aborted, "Error while getting movies from database: %v", err)
 	}
+	var movies []*proto.Movie
 	defer rows.Close()
-	return rows,nil
+	for rows.Next() {
+		var movie Movie
+		err := db.Db.ScanRows(rows, &movie)
+		if err != nil {
+			return nil,status.Errorf(codes.FailedPrecondition, "Error while scanning movies into slice")
+		}
+		formatted_time := movie.MovieReleaseDate.Format("02-01-2006")
+		movies = append(movies, &proto.Movie{
+			Id:          uint32(movie.ID),
+			Name:        movie.MovieName,
+			Image:       movie.MovieImage,
+			Director:    movie.MovieDirector,
+			Description: movie.MovieDescription,
+			Rating:      movie.MovieRating,
+			Ott:         movie.MovieOtt,
+			ReleaseDate: formatted_time,
+			CategoryId:  uint32(movie.CategoryId),
+			AdminId:     uint32(movie.AdminId),
+		})
+	}
+	return movies,nil
 }
 
-func (db DBClient) SearchForMovies(req *proto.SearchRequest) (*sql.Rows,error){
+func (db DBClient) GetAllMoviess(req *proto.GetAllMoviessRequest) ([]*proto.Movie,error){
+	rows, err := db.Db.Model(&Movie{}).Rows()
+	if err != nil {
+		return nil,status.Errorf(codes.Aborted, "Error while getting movies from database: %v", err)
+	}
+	var movies []*proto.Movie
+	defer rows.Close()
+	for rows.Next() {
+		var movie Movie
+		err := db.Db.ScanRows(rows, &movie)
+		if err != nil {
+			return nil,status.Errorf(codes.FailedPrecondition, "Error while scanning movies into slice")
+		}
+		formatted_time := movie.MovieReleaseDate.Format("02-01-2006")
+		movies = append(movies, &proto.Movie{
+			Id:          uint32(movie.ID),
+			Name:        movie.MovieName,
+			Image:       movie.MovieImage,
+			Director:    movie.MovieDirector,
+			Description: movie.MovieDescription,
+			Rating:      movie.MovieRating,
+			Ott:         movie.MovieOtt,
+			ReleaseDate: formatted_time,
+			CategoryId:  uint32(movie.CategoryId),
+			AdminId:     uint32(movie.AdminId),
+		})
+	}
+	return movies,nil
+}
+
+func (db DBClient) GetMovieById(req *proto.GetMovieByIdRequest) (*Movie,error){
+	var movie Movie
+	result := db.Db.Model(&Movie{}).Preload("Category").Where("id=?",req.MovieId).Find(&movie)
+	if result.Error!=nil{
+		if result.RecordNotFound()==true{
+			return nil,status.Errorf(codes.NotFound,"Movie with given Id not found in the Movies Table")
+		}
+	}
+	return &movie,nil
+}
+
+func (db DBClient) GetMovieByCategory(req *proto.GetMovieByCategoryRequest) ([]*proto.Movie,error){
+	var category Category
+	split := strings.Split(req.Category.Type.String(), "_")
+	category_name := strings.ToLower(split[len(split)-1])
+
+	if err := db.Db.Model(&Category{}).Where("label=?",category_name).Find(&category).Error; err!=nil{
+		return nil,status.Errorf(codes.Aborted,"Error while fetching movie based on category")
+	}
+
+	rows,err := db.Db.Model(&Movie{}).Where("category_id=?",category.ID).Rows()
+	if err!=nil{
+		return nil,status.Errorf(codes.Aborted,"Error while getting movies from database")
+	}
+
+	var movies []*proto.Movie
+	defer rows.Close()
+	for rows.Next() {
+		var movie Movie
+		err := db.Db.ScanRows(rows, &movie)
+		if err != nil {
+			return nil,status.Errorf(codes.FailedPrecondition, "Error while scanning movies into slice")
+		}
+		formatted_time := movie.MovieReleaseDate.Format("02-01-2006")
+		movies = append(movies, &proto.Movie{
+			Id:          uint32(movie.ID),
+			Name:        movie.MovieName,
+			Image:       movie.MovieImage,
+			Director:    movie.MovieDirector,
+			Description: movie.MovieDescription,
+			Rating:      movie.MovieRating,
+			Ott:         movie.MovieOtt,
+			ReleaseDate: formatted_time,
+			CategoryId:  uint32(movie.CategoryId),
+			AdminId:     uint32(movie.AdminId),
+		})
+	}
+	return movies,nil
+}
+
+func (db DBClient) SearchForMovies(req *proto.SearchRequest) ([]*proto.Movie,error){
 	var rows *sql.Rows
 	var err error
 	switch req.Filter {
@@ -349,8 +495,77 @@ func (db DBClient) SearchForMovies(req *proto.SearchRequest) (*sql.Rows,error){
 	default:
 		return nil,status.Errorf(codes.Aborted, "Error!! Enter correct name or category")
 	}
+	var movies []*proto.Movie
+	for rows.Next() {
+		var movie Movie
+		err := db.Db.ScanRows(rows, &movie)
+		if err != nil {
+			return nil,status.Errorf(codes.FailedPrecondition, "Error while scanning movies into slice")
+		}
+		formatted_time := movie.MovieReleaseDate.Format("02-01-2006")
+		movies = append(movies, &proto.Movie{
+			Id:          uint32(movie.ID),
+			Name:        movie.MovieName,
+			Image:       movie.MovieImage,
+			Director:    movie.MovieDirector,
+			Description: movie.MovieDescription,
+			Rating:      movie.MovieRating,
+			Ott:         movie.MovieOtt,
+			ReleaseDate: formatted_time,
+			CategoryId:  uint32(movie.CategoryId),
+			AdminId:     uint32(movie.AdminId),
+		})
+	}
+	return movies,nil
+}
 
-	return rows,err
+func (db DBClient) SearchForMoviess(req *proto.SearchhRequest) ([]*proto.Movie,error){
+	var rows *sql.Rows
+	var err error
+	switch req.Filter {
+	case proto.SearchhRequest_Name:
+		rows, err = db.Db.Model(&Movie{}).Where("lower(movie_name) like ?", "%"+strings.ToLower(req.Name)+"%").Rows()
+		if err != nil {
+			return nil,status.Errorf(codes.Canceled, "Error while fetching movie with given name: %v", err)
+		}
+	case proto.SearchhRequest_Category:
+		var category Category
+		split := strings.Split(req.Category.Type.String(),"_")
+		category_name := strings.ToLower(split[len(split)-1])
+
+		if err := db.Db.Model(&Category{}).Where("label=?",category_name).Find(&category).Error; err!=nil{
+			return nil,status.Errorf(codes.Aborted,"Error while fetching movie based on category")
+		}
+
+		rows,err = db.Db.Model(&Movie{}).Where("category_id=?",category.ID).Rows()
+		if err!=nil{
+			return nil,status.Errorf(codes.Aborted,"Error while getting movies from database")
+		}
+	default:
+		return nil,status.Errorf(codes.Aborted, "Error!! Enter correct name or category")
+	}
+	var movies []*proto.Movie
+	for rows.Next() {
+		var movie Movie
+		err := db.Db.ScanRows(rows, &movie)
+		if err != nil {
+			return nil,status.Errorf(codes.FailedPrecondition, "Error while scanning movies into slice")
+		}
+		formatted_time := movie.MovieReleaseDate.Format("02-01-2006")
+		movies = append(movies, &proto.Movie{
+			Id:          uint32(movie.ID),
+			Name:        movie.MovieName,
+			Image:       movie.MovieImage,
+			Director:    movie.MovieDirector,
+			Description: movie.MovieDescription,
+			Rating:      movie.MovieRating,
+			Ott:         movie.MovieOtt,
+			ReleaseDate: formatted_time,
+			CategoryId:  uint32(movie.CategoryId),
+			AdminId:     uint32(movie.AdminId),
+		})
+	}
+	return movies,nil
 }
 
 func (db DBClient) UpdateProfile(req *proto.UpdateProfileRequest) (*User,error){

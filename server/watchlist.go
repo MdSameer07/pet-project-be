@@ -3,10 +3,15 @@ package server
 import (
 	"context"
 
-	"example.com/pet-project/proto"
+	"example.com/pet-project/gen/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (m *MoviesuggestionsServiceserver) AddMovieToWatchList(ctx context.Context, req *proto.AddMovieToWatchListRequest) (*proto.AddMovieToWatchListResponse, error) {
+	if req.UserId==0 || req.MovieId==0{
+		return nil,status.Errorf(codes.FailedPrecondition,"Please enter UserId and MovieId")
+	}
 
 	watchlist,err := m.Db.AddMovieToWatchList(req)
 	if err!=nil{
@@ -25,6 +30,9 @@ func (m *MoviesuggestionsServiceserver) AddMovieToWatchList(ctx context.Context,
 }
 
 func (m *MoviesuggestionsServiceserver) RemoveMovieFromWatchList(ctx context.Context, req *proto.RemoveMovieFromWatchListRequest) (*proto.RemoveMovieFromWatchListResponse, error) {
+	if req.UserId==0 || req.MovieId==0{
+		return nil,status.Errorf(codes.FailedPrecondition,"Please enter both UserId and MovieId")
+	}
 
 	status,err := m.Db.RemoveMovieFromWatchList(req)
 	if err!=nil{

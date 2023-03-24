@@ -1,15 +1,12 @@
 package server
 
 import (
-	"database/sql"
 	"time"
 
 	"example.com/pet-project/database"
-	"example.com/pet-project/proto"
+	"example.com/pet-project/gen/proto"
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type MoviesuggestionsServiceserver struct {
@@ -86,28 +83,4 @@ type FeedBack struct {
 
 func (Viewed) TableName() string {
 	return "viewed"
-}
-
-func (m *MoviesuggestionsServiceserver) AddingMoviesToSlice(rows *sql.Rows, movies []*proto.Movie) ([]*proto.Movie, error) {
-	for rows.Next() {
-		var movie Movie
-		err := m.DB.ScanRows(rows, &movie)
-		if err != nil {
-			return nil, status.Errorf(codes.FailedPrecondition, "Error while scanning movies into slice")
-		}
-		formatted_time := movie.MovieReleaseDate.Format("02-01-2006")
-		movies = append(movies, &proto.Movie{
-			Id:          uint32(movie.ID),
-			Name:        movie.MovieName,
-			Image:       movie.MovieImage,
-			Director:    movie.MovieDirector,
-			Description: movie.MovieDescription,
-			Rating:      movie.MovieRating,
-			Ott:         movie.MovieOtt,
-			ReleaseDate: formatted_time,
-			CategoryId:  uint32(movie.CategoryId),
-			AdminId:     uint32(movie.AdminId),
-		})
-	}
-	return movies, nil
 }

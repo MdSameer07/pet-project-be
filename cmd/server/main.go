@@ -8,14 +8,15 @@ import (
 	"os"
 
 	"example.com/pet-project/database"
-	"example.com/pet-project/proto"
+	"example.com/pet-project/gen/proto"
 	"example.com/pet-project/server"
 	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
 )
 
-var port = flag.Int("port", 50051, "The server port")
+
+var port = flag.Int("port", 50059, "The server port")
 
 func main() {
 	flag.Parse()

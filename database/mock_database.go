@@ -5,10 +5,9 @@
 package database
 
 import (
-	sql "database/sql"
 	reflect "reflect"
 
-	proto "example.com/pet-project/proto"
+	proto "example.com/pet-project/gen/proto"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -95,6 +94,21 @@ func (mr *MockDatabaseMockRecorder) AddReviewForMovie(arg0 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddReviewForMovie", reflect.TypeOf((*MockDatabase)(nil).AddReviewForMovie), arg0)
 }
 
+// AdminLogin mocks base method.
+func (m *MockDatabase) AdminLogin(arg0 *proto.AdminLoginRequest) (uint32, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AdminLogin", arg0)
+	ret0, _ := ret[0].(uint32)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AdminLogin indicates an expected call of AdminLogin.
+func (mr *MockDatabaseMockRecorder) AdminLogin(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AdminLogin", reflect.TypeOf((*MockDatabase)(nil).AdminLogin), arg0)
+}
+
 // DeleteFeedBack mocks base method.
 func (m *MockDatabase) DeleteFeedBack(arg0 *proto.DeleteFeedBackRequest) (uint32, error) {
 	m.ctrl.T.Helper()
@@ -141,10 +155,10 @@ func (mr *MockDatabaseMockRecorder) DeleteReviewForMovie(arg0 interface{}) *gomo
 }
 
 // GetAllMovies mocks base method.
-func (m *MockDatabase) GetAllMovies(arg0 *proto.GetAllMoviesRequest) (*sql.Rows, error) {
+func (m *MockDatabase) GetAllMovies(arg0 *proto.GetAllMoviesRequest) ([]*proto.Movie, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetAllMovies", arg0)
-	ret0, _ := ret[0].(*sql.Rows)
+	ret0, _ := ret[0].([]*proto.Movie)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -153,6 +167,21 @@ func (m *MockDatabase) GetAllMovies(arg0 *proto.GetAllMoviesRequest) (*sql.Rows,
 func (mr *MockDatabaseMockRecorder) GetAllMovies(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllMovies", reflect.TypeOf((*MockDatabase)(nil).GetAllMovies), arg0)
+}
+
+// GetAllMoviess mocks base method.
+func (m *MockDatabase) GetAllMoviess(arg0 *proto.GetAllMoviessRequest) ([]*proto.Movie, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetAllMoviess", arg0)
+	ret0, _ := ret[0].([]*proto.Movie)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetAllMoviess indicates an expected call of GetAllMoviess.
+func (mr *MockDatabaseMockRecorder) GetAllMoviess(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetAllMoviess", reflect.TypeOf((*MockDatabase)(nil).GetAllMoviess), arg0)
 }
 
 // GetFeedBack mocks base method.
@@ -168,6 +197,51 @@ func (m *MockDatabase) GetFeedBack(arg0 *proto.GetFeedBackRequest) ([]string, er
 func (mr *MockDatabaseMockRecorder) GetFeedBack(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFeedBack", reflect.TypeOf((*MockDatabase)(nil).GetFeedBack), arg0)
+}
+
+// GetFeeedBack mocks base method.
+func (m *MockDatabase) GetFeeedBack(arg0 *proto.GetFeeedBackRequest) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFeeedBack", arg0)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFeeedBack indicates an expected call of GetFeeedBack.
+func (mr *MockDatabaseMockRecorder) GetFeeedBack(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFeeedBack", reflect.TypeOf((*MockDatabase)(nil).GetFeeedBack), arg0)
+}
+
+// GetMovieByCategory mocks base method.
+func (m *MockDatabase) GetMovieByCategory(arg0 *proto.GetMovieByCategoryRequest) ([]*proto.Movie, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMovieByCategory", arg0)
+	ret0, _ := ret[0].([]*proto.Movie)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMovieByCategory indicates an expected call of GetMovieByCategory.
+func (mr *MockDatabaseMockRecorder) GetMovieByCategory(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMovieByCategory", reflect.TypeOf((*MockDatabase)(nil).GetMovieByCategory), arg0)
+}
+
+// GetMovieById mocks base method.
+func (m *MockDatabase) GetMovieById(arg0 *proto.GetMovieByIdRequest) (*Movie, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMovieById", arg0)
+	ret0, _ := ret[0].(*Movie)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMovieById indicates an expected call of GetMovieById.
+func (mr *MockDatabaseMockRecorder) GetMovieById(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMovieById", reflect.TypeOf((*MockDatabase)(nil).GetMovieById), arg0)
 }
 
 // GiveFeedBack mocks base method.
@@ -276,10 +350,10 @@ func (mr *MockDatabaseMockRecorder) RemoveMovieFromWatchList(arg0 interface{}) *
 }
 
 // SearchForMovies mocks base method.
-func (m *MockDatabase) SearchForMovies(arg0 *proto.SearchRequest) (*sql.Rows, error) {
+func (m *MockDatabase) SearchForMovies(arg0 *proto.SearchRequest) ([]*proto.Movie, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SearchForMovies", arg0)
-	ret0, _ := ret[0].(*sql.Rows)
+	ret0, _ := ret[0].([]*proto.Movie)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -288,6 +362,21 @@ func (m *MockDatabase) SearchForMovies(arg0 *proto.SearchRequest) (*sql.Rows, er
 func (mr *MockDatabaseMockRecorder) SearchForMovies(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchForMovies", reflect.TypeOf((*MockDatabase)(nil).SearchForMovies), arg0)
+}
+
+// SearchForMoviess mocks base method.
+func (m *MockDatabase) SearchForMoviess(arg0 *proto.SearchhRequest) ([]*proto.Movie, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SearchForMoviess", arg0)
+	ret0, _ := ret[0].([]*proto.Movie)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SearchForMoviess indicates an expected call of SearchForMoviess.
+func (mr *MockDatabaseMockRecorder) SearchForMoviess(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchForMoviess", reflect.TypeOf((*MockDatabase)(nil).SearchForMoviess), arg0)
 }
 
 // UpdateFeedBack mocks base method.
