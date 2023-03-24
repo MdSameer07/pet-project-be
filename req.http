@@ -1,0 +1,8 @@
+POST http://localhost:50079/user/search-for-movies HTTP/1.1
+Host: localhost:50079
+Content-Type: application/json
+
+{
+  "filter": "Name",
+  "name" : "of"
+}
